@@ -18,15 +18,25 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
 // Configure CORS for the frontend application
-var allowedFrontendOrigin = builder.Configuration["Frontend:Url"]
-    ?? builder.Configuration["Cors:FrontendUrl"]
-    ?? "http://localhost:5173";
+var allowedFrontendOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    "http://localhost:3000",
+    "http://localhost:5173"
+};
+
+var configuredFrontendOrigin = builder.Configuration["Frontend:Url"]
+    ?? builder.Configuration["Cors:FrontendUrl"];
+
+if (!string.IsNullOrWhiteSpace(configuredFrontendOrigin))
+{
+    allowedFrontendOrigins.Add(configuredFrontendOrigin);
+}
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend",
         policy => policy
-            .WithOrigins(allowedFrontendOrigin)
+            .WithOrigins(allowedFrontendOrigins.ToArray())
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -136,6 +146,23 @@ builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IAdminStoreService, AdminStoreService>();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<CheerslyDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to apply database migrations at startup");
+        throw;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

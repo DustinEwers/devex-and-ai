@@ -1,6 +1,22 @@
 -- Seed data for Cheersly Store
 -- Items under 50 points for easy testing
 
+-- Test users
+INSERT INTO "Users" ("Id", "Email", "FirstName", "LastName", "PointsToGive", "PointsReceived", "CreatedAt", "LastLoginAt", "LastPointsReset", "Role")
+VALUES
+(gen_random_uuid(), 'alex.admin@cheersly.local', 'Alex', 'Admin', 50, 240, NOW(), NOW(), NOW(), 'Admin'),
+(gen_random_uuid(), 'sam.giver@cheersly.local', 'Sam', 'Giver', 35, 125, NOW(), NOW(), NOW(), 'Normal'),
+(gen_random_uuid(), 'taylor.receiver@cheersly.local', 'Taylor', 'Receiver', 20, 310, NOW(), NOW(), NOW(), 'Normal'),
+(gen_random_uuid(), 'jamie.newhire@cheersly.local', 'Jamie', 'Newhire', 50, 15, NOW(), NOW(), NOW(), 'Normal')
+ON CONFLICT ("Email") DO UPDATE
+SET "FirstName" = EXCLUDED."FirstName",
+	"LastName" = EXCLUDED."LastName",
+	"PointsToGive" = EXCLUDED."PointsToGive",
+	"PointsReceived" = EXCLUDED."PointsReceived",
+	"LastLoginAt" = EXCLUDED."LastLoginAt",
+	"LastPointsReset" = EXCLUDED."LastPointsReset",
+	"Role" = EXCLUDED."Role";
+
 -- Gift Cards
 INSERT INTO "StoreItems" ("Id", "Name", "Description", "PointCost", "ImageUrl", "Category", "QuantityAvailable", "IsActive", "CreatedAt", "UpdatedAt")
 VALUES 
@@ -27,7 +43,15 @@ Perfect for:
 
 🍽️ Great food awaits
 👥 Perfect for date night
-🎉 Celebrate your success', 200, 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400', 'Gift Cards', 20, true, NOW(), NOW());
+🎉 Celebrate your success', 200, 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400', 'Gift Cards', 20, true, NOW(), NOW())
+ON CONFLICT ("Name") DO UPDATE
+SET "Description" = EXCLUDED."Description",
+	"PointCost" = EXCLUDED."PointCost",
+	"ImageUrl" = EXCLUDED."ImageUrl",
+	"Category" = EXCLUDED."Category",
+	"QuantityAvailable" = EXCLUDED."QuantityAvailable",
+	"IsActive" = EXCLUDED."IsActive",
+	"UpdatedAt" = NOW();
 
 -- Swag
 INSERT INTO "StoreItems" ("Id", "Name", "Description", "PointCost", "ImageUrl", "Category", "QuantityAvailable", "IsActive", "CreatedAt", "UpdatedAt")
@@ -60,7 +84,15 @@ Features:
 ⌨️ Cherry MX switches
 🌈 RGB backlighting
 💼 Professional grade
-🎮 Great for work and play', 150, 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=400', 'Swag', 15, true, NOW(), NOW());
+🎮 Great for work and play', 150, 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=400', 'Swag', 15, true, NOW(), NOW())
+ON CONFLICT ("Name") DO UPDATE
+SET "Description" = EXCLUDED."Description",
+	"PointCost" = EXCLUDED."PointCost",
+	"ImageUrl" = EXCLUDED."ImageUrl",
+	"Category" = EXCLUDED."Category",
+	"QuantityAvailable" = EXCLUDED."QuantityAvailable",
+	"IsActive" = EXCLUDED."IsActive",
+	"UpdatedAt" = NOW();
 
 -- Experiences
 INSERT INTO "StoreItems" ("Id", "Name", "Description", "PointCost", "ImageUrl", "Category", "QuantityAvailable", "IsActive", "CreatedAt", "UpdatedAt")
@@ -88,7 +120,15 @@ VALUES
 💆 90-minute massage
 🧖 Facial treatment
 🛀 Sauna access
-🧘 Yoga class included', 300, 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400', 'Experiences', 10, true, NOW(), NOW());
+🧘 Yoga class included', 300, 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400', 'Experiences', 10, true, NOW(), NOW())
+ON CONFLICT ("Name") DO UPDATE
+SET "Description" = EXCLUDED."Description",
+	"PointCost" = EXCLUDED."PointCost",
+	"ImageUrl" = EXCLUDED."ImageUrl",
+	"Category" = EXCLUDED."Category",
+	"QuantityAvailable" = EXCLUDED."QuantityAvailable",
+	"IsActive" = EXCLUDED."IsActive",
+	"UpdatedAt" = NOW();
 
 -- Time Off
 INSERT INTO "StoreItems" ("Id", "Name", "Description", "PointCost", "ImageUrl", "Category", "QuantityAvailable", "IsActive", "CreatedAt", "UpdatedAt")
@@ -112,7 +152,15 @@ VALUES
 🏡 Comfort of home
 💼 Full productivity
 📅 One Friday
-☕ More coffee, less commute', 30, 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400', 'Time Off', NULL, true, NOW(), NOW());
+☕ More coffee, less commute', 30, 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400', 'Time Off', NULL, true, NOW(), NOW())
+ON CONFLICT ("Name") DO UPDATE
+SET "Description" = EXCLUDED."Description",
+	"PointCost" = EXCLUDED."PointCost",
+	"ImageUrl" = EXCLUDED."ImageUrl",
+	"Category" = EXCLUDED."Category",
+	"QuantityAvailable" = EXCLUDED."QuantityAvailable",
+	"IsActive" = EXCLUDED."IsActive",
+	"UpdatedAt" = NOW();
 
 -- Charitable Donations
 INSERT INTO "StoreItems" ("Id", "Name", "Description", "PointCost", "ImageUrl", "Category", "QuantityAvailable", "IsActive", "CreatedAt", "UpdatedAt")
@@ -136,7 +184,15 @@ VALUES
 🎯 Maximum impact
 📜 Official receipt
 💫 Recognition letter
-🏆 Champion of giving', 100, 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400', 'Charitable Donations', NULL, true, NOW(), NOW());
+🏆 Champion of giving', 100, 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400', 'Charitable Donations', NULL, true, NOW(), NOW())
+ON CONFLICT ("Name") DO UPDATE
+SET "Description" = EXCLUDED."Description",
+	"PointCost" = EXCLUDED."PointCost",
+	"ImageUrl" = EXCLUDED."ImageUrl",
+	"Category" = EXCLUDED."Category",
+	"QuantityAvailable" = EXCLUDED."QuantityAvailable",
+	"IsActive" = EXCLUDED."IsActive",
+	"UpdatedAt" = NOW();
 
 -- Other
 INSERT INTO "StoreItems" ("Id", "Name", "Description", "PointCost", "ImageUrl", "Category", "QuantityAvailable", "IsActive", "CreatedAt", "UpdatedAt")
@@ -160,4 +216,12 @@ VALUES
 🔌 Fast charging
 📱 Charges 3 devices
 ⚡ Compact design
-✈️ TSA approved', 35, 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400', 'Other', 40, true, NOW(), NOW());
+✈️ TSA approved', 35, 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400', 'Other', 40, true, NOW(), NOW())
+ON CONFLICT ("Name") DO UPDATE
+SET "Description" = EXCLUDED."Description",
+	"PointCost" = EXCLUDED."PointCost",
+	"ImageUrl" = EXCLUDED."ImageUrl",
+	"Category" = EXCLUDED."Category",
+	"QuantityAvailable" = EXCLUDED."QuantityAvailable",
+	"IsActive" = EXCLUDED."IsActive",
+	"UpdatedAt" = NOW();

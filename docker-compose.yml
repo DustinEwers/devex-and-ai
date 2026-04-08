@@ -10,6 +10,7 @@ services:
       - "5000:80" # host:container (Kestrel default listens on 80 in many Dockerfiles)
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=cheersly;Username=postgres;Password=postgres;Timeout=60;Command Timeout=60;Keepalive=30;Pooling=true;Minimum Pool Size=0;Maximum Pool Size=20
     depends_on:
       db:
         condition: service_healthy
@@ -28,7 +29,6 @@ services:
       - "3000:3000"
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - VITE_API_BASE_URL=http://api:80
     depends_on:
       - api
       - db
