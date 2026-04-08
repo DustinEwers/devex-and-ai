@@ -1,4 +1,24 @@
-# Cheersly
+# 
+
+
+## Skill Repos to Check Out
+https://github.com/EveryInc/compound-engineering-plugin 
+https://github.com/obra/superpowers
+https://github.com/addyosmani/agent-skills
+https://github.com/dotnet/skills/tree/main/plugins
+https://github.com/github/awesome-copilot
+https://agent-skills-hub.github.io/
+
+Repo for OpenClaw Skills
+https://docs.openclaw.ai/tools/clawhub
+
+## Agent Skills Definition
+https://agentskills.io/home
+
+
+
+
+# Demo App: Cheersly
 
 Cheersly is a workplace recognition application where employees give cheers to coworkers using a monthly point allocation. The solution includes a React frontend, a .NET API, and PostgreSQL, with Microsoft Entra ID used for authentication.
 
@@ -101,6 +121,22 @@ To stop the stack:
 ```bash
 docker compose down
 ```
+
+### 5. Seed Test Data
+
+The repository includes optional SQL seed scripts under `test-data/` for local development:
+
+- `test-data/seed-store-items.sql` inserts demo users and store items.
+- `test-data/seed-demo-cheers.sql` inserts 8 demo users and 40 demo cheer records for the public feed.
+
+Run either script from the repository root by piping it into `psql` inside the running PostgreSQL container:
+
+```powershell
+Get-Content test-data/seed-store-items.sql | docker compose exec -T db psql -U postgres -d cheersly
+Get-Content test-data/seed-demo-cheers.sql | docker compose exec -T db psql -U postgres -d cheersly
+```
+
+The cheer seed script is safe to rerun. It removes previously seeded demo cheers for the `@cheersly.demo.local` users, recreates the 40 demo records, and recalculates those demo users' point totals.
 
 ## Microsoft Entra App Registration
 
