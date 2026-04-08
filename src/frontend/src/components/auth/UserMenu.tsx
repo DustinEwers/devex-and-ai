@@ -26,6 +26,8 @@ export function UserMenu() {
 
   if (!user) return null;
 
+  const primaryRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'Normal';
+
   return (
     <div className="relative" ref={menuRef}>
       {/* Hamburger Button */}
@@ -35,8 +37,12 @@ export function UserMenu() {
         aria-label="User menu"
         aria-expanded={isOpen}
       >
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
           {user.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="hidden sm:flex flex-col items-start leading-tight">
+          <span className="text-sm font-medium text-slate-200 max-w-40 truncate">{user.name}</span>
+          <span className="text-xs text-slate-400">{primaryRole}</span>
         </div>
         <svg
           className={`w-5 h-5 text-slate-300 transition-transform ${isOpen ? 'rotate-180' : ''}`}

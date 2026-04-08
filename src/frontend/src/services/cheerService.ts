@@ -1,6 +1,6 @@
 import { IPublicClientApplication } from '@azure/msal-browser';
 import * as msalApiClient from '../utils/msalApiClient';
-import { CheerDTO, CreateCheerRequest } from '../types/cheer';
+import { CheerDTO, CreateCheerRequest, FeedQueryOptions } from '../types/cheer';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -24,11 +24,24 @@ export async function createCheer(
 export async function getFeed(
   msalInstance: IPublicClientApplication,
   skip: number = 0,
-  take: number = 20
+  take: number = 20,
+  options: FeedQueryOptions = {
+    sortBy: 'createdAt',
+    sortDir: 'desc',
+    filterMode: 'all',
+  }
 ): Promise<CheerDTO[]> {
+  const params = new URLSearchParams({
+    skip: skip.toString(),
+    take: take.toString(),
+    sortBy: options.sortBy,
+    sortDir: options.sortDir,
+    filterMode: options.filterMode,
+  });
+
   return msalApiClient.get<CheerDTO[]>(
     msalInstance,
-    `${API_BASE_URL}/api/cheers?skip=${skip}&take=${take}`
+    `${API_BASE_URL}/api/cheers?${params.toString()}`
   );
 }
 

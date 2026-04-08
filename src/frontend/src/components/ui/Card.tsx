@@ -16,7 +16,7 @@ export const Card: React.FC<CardProps> = ({
   const variantStyles = {
     default: 'border border-slate-700 shadow-lg hover:border-slate-600 transition-all',
     elevated: 'border border-slate-700 shadow-2xl ring-1 ring-slate-600/50',
-    recognition: 'border-l-4 border-l-amber-400 shadow-lg hover:shadow-amber-400/10 transition-all',
+    recognition: 'border-l-4 border-l-blue-500 border border-slate-700 shadow-md transition-all',
   };
   
   return (
