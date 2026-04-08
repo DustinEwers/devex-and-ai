@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./src/api
+      dockerfile: Dockerfile
+    image: cheersly-api:dev
+    ports:
+      - "5000:80" # host:container (Kestrel default listens on 80 in many Dockerfiles)
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src/api:/app:cached
+    networks:
+      - cheersly-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    image: cheersly-frontend:dev
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_API_BASE_URL=http://api:80
+    depends_on:
+      - api
+      - db
+    volumes:
+      - ./src/frontend:/app:cached
+      - frontend-node-modules:/app/node_modules
+    networks:
+      - cheersly-net
+    restart: unless-stopped
+
+  db:
+    image: postgres:14.3
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: cheersly
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cheersly-net
+
+volumes:
+  postgres-data:
+  frontend-node-modules:
+
+networks:
+  cheersly-net:
+    driver: bridge
