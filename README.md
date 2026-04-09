@@ -1,5 +1,4 @@
-# 
-
+# The Post-Code Bottleneck: DevEx for the Agentic Era
 
 ## Skill Repos to Check Out
 https://github.com/EveryInc/compound-engineering-plugin 
@@ -9,13 +8,11 @@ https://github.com/dotnet/skills/tree/main/plugins
 https://github.com/github/awesome-copilot
 https://agent-skills-hub.github.io/
 
-Repo for OpenClaw Skills
+Repo for OpenClaw Skills (which you can steal for your coding agents)
 https://docs.openclaw.ai/tools/clawhub
 
 ## Agent Skills Definition
 https://agentskills.io/home
-
-
 
 
 # Demo App: Cheersly
@@ -333,11 +330,7 @@ Ensure the API allows the same origin you are using in the browser:
 
 ### Redirect URI mismatch
 
-Make sure the URI configured in Entra exactly matches the frontend URL used during sign-in, including scheme, host, port, and trailing slash where applicable.
-
-## Additional Documentation
-
-- [docs/auth-entra.md](docs/auth-entra.md)
+Make sure the URI configured in Entra exactly matches the frontend URL used during sign-in, including scheme, host, port, and trailing slash where applicable.- [docs/auth-entra.md](docs/auth-entra.md)
 - [spec/spec-infrastructure-microsoft-entra-auth.md](spec/spec-infrastructure-microsoft-entra-auth.md)
 - [spec/spec-infrastructure-frontend-microsoft-entra-auth.md](spec/spec-infrastructure-frontend-microsoft-entra-auth.md)
 - [src/frontend/README.md](src/frontend/README.md)
