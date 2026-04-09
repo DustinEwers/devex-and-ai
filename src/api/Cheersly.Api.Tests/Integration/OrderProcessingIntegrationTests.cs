@@ -1,9 +1,12 @@
 using Cheersly.Api.Data;
 using Cheersly.Api.Models;
 using Cheersly.Api.Models.DTOs;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -23,19 +26,18 @@ public class OrderProcessingIntegrationTests
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
+                builder.UseEnvironment("Testing");
                 builder.ConfigureServices(services =>
                 {
-                    // Remove the real database registration
-                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<CheerslyDbContext>));
-                    if (descriptor != null)
-                    {
-                        services.Remove(descriptor);
-                    }
+                    services.RemoveAll(typeof(CheerslyDbContext));
+                    services.RemoveAll(typeof(DbContextOptions));
+                    services.RemoveAll(typeof(DbContextOptions<CheerslyDbContext>));
+                    services.RemoveAll(typeof(IDbContextOptionsConfiguration<CheerslyDbContext>));
 
                     // Add in-memory database for testing
                     services.AddDbContext<CheerslyDbContext>(options =>
                     {
-                        options.UseInMemoryDatabase("TestDb");
+                        options.UseInMemoryDatabase($"TestDb-{Guid.NewGuid()}");
                     });
                 });
             });

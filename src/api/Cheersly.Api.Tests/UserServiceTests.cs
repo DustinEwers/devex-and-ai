@@ -11,6 +11,22 @@ namespace Cheersly.Api.Tests;
 [TestClass]
 public class UserServiceTests
 {
+    private static async Task<TException> AssertThrowsAsync<TException>(Func<Task> action)
+        where TException : Exception
+    {
+        try
+        {
+            await action();
+        }
+        catch (TException exception)
+        {
+            return exception;
+        }
+
+        Assert.Fail($"Expected exception of type {typeof(TException).Name}.");
+        throw new InvalidOperationException("Unreachable");
+    }
+
     private CheerslyDbContext GetInMemoryDbContext()
     {
         var options = new DbContextOptionsBuilder<CheerslyDbContext>()
@@ -293,5 +309,127 @@ public class UserServiceTests
 
         // Assert
         Assert.IsNull(result);
+    }
+
+    [TestMethod]
+    public async Task SyncUserFromClaimsAsync_Throws_WhenPrincipalIsNotAuthenticated()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+        var principal = new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Act & Assert
+    await AssertThrowsAsync<InvalidOperationException>(
+            () => service.SyncUserFromClaimsAsync(principal));
+    }
+
+    [TestMethod]
+    public async Task SyncUserFromClaimsAsync_UsesNameClaimFallback_WhenGivenAndFamilyNameMissing()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+
+        var claims = new[]
+        {
+            new Claim("preferred_username", "fallback@example.com"),
+            new Claim("name", "Pat Smith")
+        };
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        // Act
+        var user = await service.SyncUserFromClaimsAsync(principal);
+
+        // Assert
+        Assert.AreEqual("Pat", user.FirstName);
+        Assert.AreEqual("Smith", user.LastName);
+    }
+
+    [TestMethod]
+    public async Task SyncUserFromClaimsAsync_UsesEmailPrefixFallback_WhenNameClaimsAreMissing()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+
+        var claims = new[]
+        {
+            new Claim("preferred_username", "fallback.user@example.com")
+        };
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        // Act
+        var user = await service.SyncUserFromClaimsAsync(principal);
+
+        // Assert
+        Assert.AreEqual("fallback.user", user.FirstName);
+        Assert.AreEqual(string.Empty, user.LastName);
+    }
+
+    [TestMethod]
+    public async Task SyncUserFromClaimsAsync_UsesRolesClaim_WhenStandardRoleClaimIsMissing()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+
+        var claims = new[]
+        {
+            new Claim("preferred_username", "admin@example.com"),
+            new Claim("given_name", "Admin"),
+            new Claim("family_name", "User"),
+            new Claim("roles", "Admin")
+        };
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        // Act
+        var user = await service.SyncUserFromClaimsAsync(principal);
+
+        // Assert
+        Assert.AreEqual("Admin", user.Role);
+    }
+
+    [TestMethod]
+    public async Task DeductPointsAsync_Throws_WhenPointsAreNegative()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+
+        // Act & Assert
+    await AssertThrowsAsync<ArgumentException>(
+            () => service.DeductPointsAsync(Guid.NewGuid(), -1));
+    }
+
+    [TestMethod]
+    public async Task AddReceivedPointsAsync_Throws_WhenUserDoesNotExist()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+
+        // Act & Assert
+    await AssertThrowsAsync<InvalidOperationException>(
+            () => service.AddReceivedPointsAsync(Guid.NewGuid(), 5));
+    }
+
+    [TestMethod]
+    public async Task AddReceivedPointsAsync_Throws_WhenPointsAreNegative()
+    {
+        // Arrange
+        using var context = GetInMemoryDbContext();
+        var logger = new Mock<ILogger<UserService>>();
+        var service = new UserService(context, logger.Object);
+
+        // Act & Assert
+        await AssertThrowsAsync<ArgumentException>(
+            () => service.AddReceivedPointsAsync(Guid.NewGuid(), -5));
     }
 }

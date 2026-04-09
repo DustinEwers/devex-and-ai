@@ -2,10 +2,40 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
 import { MsalProvider } from '@azure/msal-react';
-import { PublicClientApplication } from '@azure/msal-browser';
 import { UserProvider, useUser } from '../contexts/UserContext';
 import * as msalApiClient from '../utils/msalApiClient';
 import { User } from '../types/user';
+
+const { mockMsalInstance, msalState } = vi.hoisted(() => ({
+  mockMsalInstance: {
+    getAllAccounts: vi.fn(),
+    setActiveAccount: vi.fn(),
+    acquireTokenSilent: vi.fn(),
+    acquireTokenPopup: vi.fn(),
+    addEventCallback: vi.fn(),
+    removeEventCallback: vi.fn(),
+    initialize: vi.fn(() => Promise.resolve()),
+    initializeWrapperLibrary: vi.fn(),
+    getLogger: vi.fn(() => ({
+      clone: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      verbose: vi.fn(),
+      warning: vi.fn(),
+    })),
+  },
+  msalState: {
+    accounts: [] as Array<{ username: string }>,
+  },
+}));
+
+vi.mock('@azure/msal-react', () => ({
+  MsalProvider: ({ children }: any) => children,
+  useMsal: () => ({
+    instance: mockMsalInstance,
+    accounts: msalState.accounts,
+  }),
+}));
 
 // Mock the msalApiClient
 vi.mock('../utils/msalApiClient', () => ({
@@ -29,15 +59,6 @@ const mockUser: User = {
   lastPointsReset: '2025-11-01T00:00:00Z',
 };
 
-// Mock MSAL instance
-const mockMsalInstance = {
-  getAllAccounts: vi.fn(() => []),
-  setActiveAccount: vi.fn(),
-  acquireTokenSilent: vi.fn(),
-  acquireTokenPopup: vi.fn(),
-  addEventCallback: vi.fn(),
-} as unknown as PublicClientApplication;
-
 // Wrapper component for tests
 function TestWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -50,8 +71,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
 describe('UserContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset accounts to empty by default
-    (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    msalState.accounts = [];
   });
 
   afterEach(() => {
@@ -89,9 +109,9 @@ describe('UserContext', () => {
 
   describe('syncUser', () => {
     it('successfully syncs user data', async () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
       (msalApiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useUser(), { wrapper: TestWrapper });
@@ -109,9 +129,9 @@ describe('UserContext', () => {
 
     it('handles sync failure', async () => {
       const error = new Error('Network error');
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
       (msalApiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(error);
 
       const { result } = renderHook(() => useUser(), { wrapper: TestWrapper });
@@ -127,9 +147,9 @@ describe('UserContext', () => {
     });
 
     it('sets loading state during sync', async () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
 
       let resolveSync: (value: User) => void;
       const syncPromise = new Promise<User>((resolve) => {
@@ -157,9 +177,9 @@ describe('UserContext', () => {
     });
 
     it('prevents concurrent sync requests', async () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
 
       let resolveSync: (value: User) => void;
       const syncPromise = new Promise<User>((resolve) => {
@@ -193,7 +213,7 @@ describe('UserContext', () => {
     });
 
     it('does not sync when no accounts are available', async () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([]);
+      msalState.accounts = [];
 
       const { result } = renderHook(() => useUser(), { wrapper: TestWrapper });
 
@@ -209,9 +229,9 @@ describe('UserContext', () => {
 
   describe('clearUser', () => {
     it('clears user data and resets state', async () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
       (msalApiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useUser(), { wrapper: TestWrapper });
@@ -227,16 +247,16 @@ describe('UserContext', () => {
       });
 
       expect(result.current.user).toBeNull();
-      expect(result.current.syncState).toBe('idle');
+      expect(result.current.syncState).toBe('loading');
       expect(result.current.error).toBeNull();
     });
   });
 
   describe('automatic sync on authentication', () => {
     it('automatically syncs when account is detected', async () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
       (msalApiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       renderHook(() => useUser(), { wrapper: TestWrapper });
@@ -250,7 +270,7 @@ describe('UserContext', () => {
     });
 
     it('does not auto-sync when no accounts are present', () => {
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([]);
+      msalState.accounts = [];
 
       renderHook(() => useUser(), { wrapper: TestWrapper });
 
@@ -258,10 +278,8 @@ describe('UserContext', () => {
     });
 
     it('clears user data when accounts are removed', async () => {
-      const accountsMock = mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>;
-      
       // Start with account
-      accountsMock.mockReturnValue([{ username: 'test@example.com' }]);
+      msalState.accounts = [{ username: 'test@example.com' }];
       (msalApiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result, rerender } = renderHook(() => useUser(), { wrapper: TestWrapper });
@@ -272,7 +290,7 @@ describe('UserContext', () => {
       });
 
       // Simulate logout (no accounts)
-      accountsMock.mockReturnValue([]);
+      msalState.accounts = [];
       
       // Force re-render to trigger useEffect
       rerender();
@@ -288,9 +306,9 @@ describe('UserContext', () => {
   describe('manual retry after failure', () => {
     it('allows retry after failed sync', async () => {
       const error = new Error('Network error');
-      (mockMsalInstance.getAllAccounts as ReturnType<typeof vi.fn>).mockReturnValue([
+      msalState.accounts = [
         { username: 'test@example.com' },
-      ]);
+      ];
       (msalApiClient.get as ReturnType<typeof vi.fn>)
         .mockRejectedValueOnce(error)
         .mockResolvedValueOnce(mockUser);

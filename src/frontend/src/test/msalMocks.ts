@@ -63,15 +63,25 @@ export function createMockAuthResult(
  */
 export function createMockMsalInstance() {
   const mockAccount = createMockAccount();
+  const logger = {
+    clone: vi.fn(() => logger),
+    error: vi.fn(),
+    info: vi.fn(),
+    verbose: vi.fn(),
+    warning: vi.fn(),
+  };
 
   return {
     getAllAccounts: vi.fn(() => [mockAccount]),
     getActiveAccount: vi.fn(() => mockAccount),
+    getLogger: vi.fn(() => logger),
+    initialize: vi.fn(() => Promise.resolve()),
     setActiveAccount: vi.fn(),
     acquireTokenSilent: vi.fn(() => Promise.resolve(createMockAuthResult())),
     acquireTokenPopup: vi.fn(() => Promise.resolve(createMockAuthResult())),
     loginPopup: vi.fn(() => Promise.resolve(createMockAuthResult())),
     logoutPopup: vi.fn(() => Promise.resolve()),
+    initializeWrapperLibrary: vi.fn(),
     addEventCallback: vi.fn(),
     removeEventCallback: vi.fn(),
     handleRedirectPromise: vi.fn(() => Promise.resolve(null)),

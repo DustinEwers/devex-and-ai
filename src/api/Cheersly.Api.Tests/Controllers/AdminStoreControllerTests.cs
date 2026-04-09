@@ -13,10 +13,10 @@ namespace Cheersly.Api.Tests.Controllers;
 [TestClass]
 public class AdminStoreControllerTests
 {
-    private readonly Mock<IAdminStoreService> _mockAdminStoreService;
-    private readonly Mock<IUserService> _mockUserService;
-    private readonly Mock<ILogger<AdminStoreController>> _mockLogger;
-    private readonly AdminStoreController _controller;
+    private Mock<IAdminStoreService> _mockAdminStoreService = null!;
+    private Mock<IUserService> _mockUserService = null!;
+    private Mock<ILogger<AdminStoreController>> _mockLogger = null!;
+    private AdminStoreController _controller = null!;
 
     [TestInitialize]
     public void Setup()
@@ -121,7 +121,8 @@ public class AdminStoreControllerTests
         var result = await _controller.UpdateOrderStatus(orderId, updateDto);
 
         // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        Assert.IsNotNull(badRequestResult);
         var errorResponse = badRequestResult.Value;
         Assert.IsNotNull(errorResponse);
     }
@@ -252,10 +253,10 @@ public class AdminStoreControllerTests
     public void GetValidOrderStatuses_ShouldReturnStatusesAndTransitions()
     {
         // Act
-        var result = _controller!.GetValidOrderStatuses();
+        var result = _controller.GetValidOrderStatuses();
 
         // Assert
-        var okResult = result as OkObjectResult;
+        var okResult = result.Result as OkObjectResult;
         Assert.IsNotNull(okResult);
         Assert.IsNotNull(okResult.Value);
     }

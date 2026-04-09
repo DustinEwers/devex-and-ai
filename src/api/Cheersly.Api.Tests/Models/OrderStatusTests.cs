@@ -12,7 +12,7 @@ public class OrderStatusTests
     public void FromString_ValidStatus_ShouldReturnCorrectEnum(string statusString, OrderStatus expectedStatus)
     {
         // Act
-        var result = OrderStatus.FromString(statusString);
+        var result = OrderStatusExtensions.FromString(statusString);
 
         // Assert
         Assert.AreEqual(expectedStatus, result);
@@ -22,7 +22,18 @@ public class OrderStatusTests
     public void FromString_InvalidStatus_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.ThrowsException<ArgumentException>(() => OrderStatus.FromString("InvalidStatus"));
+        ArgumentException? exception = null;
+
+        try
+        {
+            OrderStatusExtensions.FromString("InvalidStatus");
+        }
+        catch (ArgumentException ex)
+        {
+            exception = ex;
+        }
+
+        Assert.IsNotNull(exception);
         Assert.IsTrue(exception.Message.Contains("Invalid order status: InvalidStatus"));
     }
 
