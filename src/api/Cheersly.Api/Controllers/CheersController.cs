@@ -93,10 +93,62 @@ public class CheersController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(List<CheerDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFeed([FromQuery] int skip = 0, [FromQuery] int take = 20)
+    public async Task<IActionResult> GetFeed(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 20,
+        [FromQuery] string sortBy = "createdAt",
+        [FromQuery] string sortDir = "desc",
+        [FromQuery] string filterMode = "all")
     {
-        var cheers = await _cheerService.GetFeedAsync(skip, take);
+        if (!TryParseSortBy(sortBy, out var parsedSortBy))
+        {
+            return BadRequest(new ErrorResponse
+            {
+                Error = "Validation failed",
+                Details = [$"Invalid sortBy value '{sortBy}'. Allowed values: createdAt, points"]
+            });
+        }
+
+        if (!TryParseSortDirection(sortDir, out var parsedSortDirection))
+        {
+            return BadRequest(new ErrorResponse
+            {
+                Error = "Validation failed",
+                Details = [$"Invalid sortDir value '{sortDir}'. Allowed values: asc, desc"]
+            });
+        }
+
+        if (!TryParseFilterMode(filterMode, out var parsedFilterMode))
+        {
+            return BadRequest(new ErrorResponse
+            {
+                Error = "Validation failed",
+                Details = [$"Invalid filterMode value '{filterMode}'. Allowed values: all, directedAtMe"]
+            });
+        }
+
+        Guid? currentUserId = null;
+        if (parsedFilterMode == FeedFilterMode.DirectedAtMe)
+        {
+            var user = await _userService.SyncUserFromClaimsAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            currentUserId = user.Id;
+        }
+
+        var cheers = await _cheerService.GetFeedAsync(
+            skip,
+            take,
+            parsedSortBy,
+            parsedSortDirection,
+            parsedFilterMode,
+            currentUserId);
+
         return Ok(cheers);
     }
 
@@ -153,5 +205,53 @@ public class CheersController : ControllerBase
         }
 
         return Ok(cheer);
+    }
+
+    private static bool TryParseSortBy(string value, out FeedSortBy sortBy)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "createdat":
+                sortBy = FeedSortBy.CreatedAt;
+                return true;
+            case "points":
+                sortBy = FeedSortBy.Points;
+                return true;
+            default:
+                sortBy = default;
+                return false;
+        }
+    }
+
+    private static bool TryParseSortDirection(string value, out FeedSortDirection sortDirection)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "asc":
+                sortDirection = FeedSortDirection.Asc;
+                return true;
+            case "desc":
+                sortDirection = FeedSortDirection.Desc;
+                return true;
+            default:
+                sortDirection = default;
+                return false;
+        }
+    }
+
+    private static bool TryParseFilterMode(string value, out FeedFilterMode filterMode)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "all":
+                filterMode = FeedFilterMode.All;
+                return true;
+            case "directedatme":
+                filterMode = FeedFilterMode.DirectedAtMe;
+                return true;
+            default:
+                filterMode = default;
+                return false;
+        }
     }
 }

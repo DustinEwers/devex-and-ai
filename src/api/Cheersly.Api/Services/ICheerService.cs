@@ -14,12 +14,22 @@ public interface ICheerService
     Task<CheerDTO> CreateCheerAsync(Guid senderId, CreateCheerRequest request);
 
     /// <summary>
-    /// Gets the public feed of all cheers, ordered by creation date descending.
+    /// Gets the public feed of all cheers.
     /// </summary>
     /// <param name="skip">Number of cheers to skip for pagination</param>
     /// <param name="take">Number of cheers to take for pagination</param>
+    /// <param name="sortBy">Sort field</param>
+    /// <param name="sortDirection">Sort direction</param>
+    /// <param name="filterMode">Feed filter mode</param>
+    /// <param name="currentUserId">Current authenticated user ID (required for DirectedAtMe filter)</param>
     /// <returns>List of cheer DTOs</returns>
-    Task<List<CheerDTO>> GetFeedAsync(int skip = 0, int take = 20);
+    Task<List<CheerDTO>> GetFeedAsync(
+        int skip = 0,
+        int take = 20,
+        FeedSortBy sortBy = FeedSortBy.CreatedAt,
+        FeedSortDirection sortDirection = FeedSortDirection.Desc,
+        FeedFilterMode filterMode = FeedFilterMode.All,
+        Guid? currentUserId = null);
 
     /// <summary>
     /// Gets all cheers sent by a specific user.

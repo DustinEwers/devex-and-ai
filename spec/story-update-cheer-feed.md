@@ -1,5 +1,7 @@
 As a user, I'd like to a more aesthetic and compact cheer feed.
 
+Implementation spec: [spec-design-cheer-feed-refresh.md](spec-design-cheer-feed-refresh.md)
+
 Make it pop.
 
 Acceptance Criteria:

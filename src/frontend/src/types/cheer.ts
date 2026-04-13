@@ -25,6 +25,16 @@ export interface CheerDTO {
   recipients: CheerRecipientDTO[];
 }
 
+export type FeedSortBy = 'createdAt' | 'points';
+export type FeedSortDirection = 'asc' | 'desc';
+export type FeedFilterMode = 'all' | 'directedAtMe';
+
+export interface FeedQueryOptions {
+  sortBy: FeedSortBy;
+  sortDir: FeedSortDirection;
+  filterMode: FeedFilterMode;
+}
+
 export interface ErrorResponse {
   error: string;
   details: string[];

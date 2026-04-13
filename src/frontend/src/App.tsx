@@ -151,12 +151,6 @@ function AppContent() {
                       Admin {import.meta.env.DEV && user?.role !== 'Admin' && '(Dev)'}
                     </button>
                   )}
-                  {/* Debug: Show user role in development */}
-                  {import.meta.env.DEV && user && (
-                    <div className="py-4 px-2 text-xs text-slate-500">
-                      Role: {user.role || 'undefined'} | Email: {user.email}
-                    </div>
-                  )}
                 </nav>
               </div>
 

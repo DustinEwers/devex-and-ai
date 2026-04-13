@@ -161,13 +161,40 @@ public class CheerService : ICheerService
         }
     }
 
-    public async Task<List<CheerDTO>> GetFeedAsync(int skip = 0, int take = 20)
+    public async Task<List<CheerDTO>> GetFeedAsync(
+        int skip = 0,
+        int take = 20,
+        FeedSortBy sortBy = FeedSortBy.CreatedAt,
+        FeedSortDirection sortDirection = FeedSortDirection.Desc,
+        FeedFilterMode filterMode = FeedFilterMode.All,
+        Guid? currentUserId = null)
     {
-        var cheers = await _context.Cheers
+        var query = _context.Cheers
             .Include(c => c.Sender)
             .Include(c => c.Recipients)
                 .ThenInclude(r => r.Recipient)
-            .OrderByDescending(c => c.CreatedAt)
+            .AsQueryable();
+
+        if (filterMode == FeedFilterMode.DirectedAtMe)
+        {
+            if (!currentUserId.HasValue)
+            {
+                throw new ArgumentException("Current user ID is required for directedAtMe filter");
+            }
+
+            query = query.Where(c => c.Recipients.Any(r => r.RecipientId == currentUserId.Value));
+        }
+
+        query = (sortBy, sortDirection) switch
+        {
+            (FeedSortBy.CreatedAt, FeedSortDirection.Asc) => query.OrderBy(c => c.CreatedAt),
+            (FeedSortBy.CreatedAt, FeedSortDirection.Desc) => query.OrderByDescending(c => c.CreatedAt),
+            (FeedSortBy.Points, FeedSortDirection.Asc) => query.OrderBy(c => c.PointsPerRecipient * c.Recipients.Count),
+            (FeedSortBy.Points, FeedSortDirection.Desc) => query.OrderByDescending(c => c.PointsPerRecipient * c.Recipients.Count),
+            _ => query.OrderByDescending(c => c.CreatedAt)
+        };
+
+        var cheers = await query
             .Skip(skip)
             .Take(take)
             .ToListAsync();
